@@ -2,6 +2,11 @@ import styled from '@emotion/styled'
 import CardBody from './card/CardBody'
 import Spinner from './Spinner'
 import CardHeader from './card/CardHeader'
+import { useTypedSelector } from '../hooks/useRedux';
+import { FC, ReactElement,} from 'react';
+import { ICryptoPrice } from '../types/cryptoTypes';
+
+
 
 const Container = styled.div`
     margin-top: 40px;
@@ -31,24 +36,23 @@ const ResultBody = styled.div`
 `
 
 
-
-
-
-
-const Result = ({ result }) => {
-    const { PRICE, HIGHDAY, LOWDAY, LASTUPDATE, CHANGEPCT24HOUR, IMAGEURL } = result;
+const Result: FC = ():ReactElement => {
+    const { cryptoPrice, status, showResults } = useTypedSelector(state => state.main)
+    const { imageUrl, price, highDay, lowDay } = cryptoPrice as ICryptoPrice
     return (
         <>
-        { result.Price ? (
-            <Container>
-                <CardHeader imageUrl={IMAGEURL} price={PRICE} />
-                <CardBody highDay={HIGHDAY} lowDay={LOWDAY} changePtc24Hour={CHANGEPCT24HOUR}/>
-            </Container>):<p>Loading...</p>
-        }
-        
+          {  
+            status !== 'pending' ? (
+                <Container>
+                    <CardHeader imageUrl={imageUrl} price={price} />
+                    <CardBody highDay={highDay} lowDay={lowDay} changePtc24Hour={''}/>
+                </Container>
+                ):<Spinner/>
+            }
+
         </>
     )
-       
+
 }
 
 export default Result;

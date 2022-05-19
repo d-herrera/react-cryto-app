@@ -1,99 +1,117 @@
-import { createSlice, PayloadAction, createAsyncThunk} from '@reduxjs/toolkit'
-import { Api, getCriptoCurrencies } from '../api/api'
-import { UserSelection } from '../types/formTypes'
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
+import { ApiGetCryptoList, ApiGetCryptoPrice } from '../api/api'
+import { ICryptoPrice, ICryptoPriceResponse } from '../types/cryptoTypes'
+import { ICryptoList, IListItem, UserSelection } from '../types/formTypes'
 
-
-
-export type cryptoListItem = {
-    CoinInfo: { 
-      Id: string
-      Name: string
-      FullName: string
-      Internal: string
-      ImageUrl: string
-      },    
-      DISPLAY: {}
-      RAW:{}
-}
-
-type GetCryptoOptionListResponse = Array<cryptoListItem>
 
 export const getCryptoList = createAsyncThunk(
   'get/crytoList',
-  async ()=> {
-    try{
-          const response = await Api.get(`/data/top/totalvolfull?limit=15&tsym=USD`)  
-          return response.data.Data as GetCryptoOptionListResponse
-        }catch(err){
-          console.log(err);
+  async () => {
+    try {
+      const apiCallReponse = await ApiGetCryptoList()
+      if (apiCallReponse !== undefined) {
+        return apiCallReponse as ICryptoList
       }
+    } catch (err) {
+      console.log(err);
+    }
   })
 
-  export const getCryptoPrice = createAsyncThunk<any,any, AsyncThunkConfig>(
-    'get/crytoPryce',
-    async (userSelection:UserSelection)=> {
-      const {selectedCurrency, selectedCrypto } = userSelection;
-      try{
-            const response = await Api.get(`/data/pricemultifull?fsyms=${selectedCrypto}&tsyms=${selectedCurrency}`);
-            return response
-          }catch(err){
-            console.log(err);
-        }
-    })
+export const getCryptoPrice = createAsyncThunk(
+  'get/crytoPryce',
+  async (userSelection: UserSelection) => {
+    try {
+      const response = await ApiGetCryptoPrice(userSelection);
+      if (response) {
+        const {
+          IMAGEURL: imageUrl,
+          PRICE: price,
+          HIGHDAY: highDay,
+          LOWDAY: lowDay
+        } = response as ICryptoPriceResponse
 
-  interface Item {
-    fullName: string
-    imageUrl:string
-    name:string
-    id:string
+        return {
+          imageUrl,
+          price,
+          highDay,
+          lowDay
+        } as ICryptoPrice
 
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
   }
+)
 
-  type InitialState = {
-    cryptoList:Array<Item>
-    cryptoPrice:Object
-    status: string
-  }
 
-const initialState = {
-  cryptoList:[],
-  cryptoPrice:{},
+type InitialState = {
+  cryptoList: Array<IListItem>
+  cryptoPrice: ICryptoPrice
+  status: string
+  showResults: boolean
+}
+
+const initialState: InitialState = {
+  cryptoList: [],
+  cryptoPrice: {
+    highDay: '',
+    lowDay: '',
+    price: '',
+    imageUrl: ''
+  },
   status: 'idle',
-} as InitialState;
+  showResults: false
+}
 
 
 const mainSlice = createSlice({
   name: 'main',
   initialState,
   reducers: {
+    updateShowResults: (state: InitialState, action: PayloadAction<boolean>) => {
+      console.log('[asa x reducer: ', action.payload)
+      state.showResults = action.payload
+      return state
+    }
   },
   extraReducers: (builder) => {
 
     builder
-    .addCase(getCryptoList.pending, (state) => {
-     state.status = 'pending';
-     return state
-  })
+      .addCase(getCryptoList.pending, (state) => {
+        state.status = 'pending';
+        return state
+      })
     builder
       .addCase(getCryptoList.fulfilled, (state, action) => {
-        if(action.payload !== undefined){
-          action.payload.map(cryto=>{
-            const {FullName, Id, ImageUrl, Name } = cryto.CoinInfo;
+        if (action.payload !== undefined) {
+          action.payload.map(cryto => {
+            const { FullName, Id, ImageUrl, Name } = cryto.CoinInfo;
             state.cryptoList.push({
               fullName: FullName,
-              imageUrl:ImageUrl,
-              name:Name,
-              id:Id
+              imageUrl: ImageUrl,
+              name: Name,
+              id: Id
             })
           })
           state.status = "idle"
-        }  
-    })
+        }
+      }),
+      builder
     builder
-      .addCase(getCryptoPrice.pending, (action, payload)=>{
-        
+      .addCase(getCryptoPrice.pending, (state, action) => {
+        state.status = 'pending'
+      })
+      .addCase(getCryptoPrice.fulfilled, (state, action) => {
+        if (action.payload) {
+          state.cryptoPrice = action.payload as ICryptoPrice
+          state.status = 'idle'
+        }
+
       })
   },
-})
 
-export default  mainSlice.reducer
+})
+export const { updateShowResults } = mainSlice.actions
+export default mainSlice.reducer

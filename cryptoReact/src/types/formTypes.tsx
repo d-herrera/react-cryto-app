@@ -1,17 +1,26 @@
-export type Currency={
-    id:string,
+import { ICryptoListItem } from "./cryptoTypes"
+
+export interface Currency{
+    id:string
     name:string
 }
 
-export type UserSelectionMainForm = {
+export interface IListItem {
+    fullName: string
+    imageUrl: string
+    name: string
+    id: string
+  
+  }
+
+export interface UserSelectionMainForm {
     selectedCurrency:string
     selectedCrypto:string
 }
 
 
 
-export type CryptoItem =
-    {
+export interface CryptoItem{
         CoinInfo: {
             Id:string;
             FullName:string,
@@ -21,7 +30,15 @@ export type CryptoItem =
         RAW:object
     }
 
-export type UserSelection {
+export interface UserSelection{
     selectedCurrency: string
     selectedCrypto: string
 }
+
+export interface SelectOption{
+    id:string
+    name:string,
+
+}
+
+export type ICryptoList = Array<ICryptoListItem>

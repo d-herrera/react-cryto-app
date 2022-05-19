@@ -1,14 +1,14 @@
-import axios, { AxiosError, AxiosResponse } from "axios";
-import { CryptosInfoResponse } from "../types/apiTypes";
-import { UserSelectionMainForm } from "../types/formTypes";
-import {formatCryptoListSelect} from './cleaners'
+import axios from "axios";
+import { CryptosInfoResponse, GetCryptoListApiResponse } from "../types/apiTypes";
+import { UserSelection } from "../types/formTypes";
+
 
 const url = 'https://min-api.cryptocompare.com/';
 export const Api = axios.create({
     baseURL: url,
   });
 
-  const proccessError = (err):void=>{
+  const proccessError = (err:any):void=>{
     if (err.response) {
         // The client was given an error response (5xx, 4xx)
     } else if (err.request) {
@@ -23,35 +23,28 @@ export const Api = axios.create({
     } 
 }
 
-type getCriptoCurrenciesPayload = {
-    CoinInfo:object
-    DISPLAY: object
-    RAW:object
-}
 
-type GetCriptoCurrencies = Array<getCriptoCurrenciesPayload>
 
-export const getCriptoCurrencies = async ()=>{
+export const ApiGetCryptoList = async()=>{
     try{
-        const data =  await api.get(`/data/top/totalvolfull?limit=10&tsym=USD`)     
-        return formatCryptoListSelect(data.data.Data);
-    }catch(err){
-        proccessError(err)
-    }
+        const { data } = await Api.get<GetCryptoListApiResponse>(`data/top/totalvolfull?limit=15&tsym=USD`)    
+        return data.Data
 
+    }catch(err){
+       return proccessError(err)
+    }
 }
 
 
-export const getCryptosInfo = async (userSelection:UserSelectionMainForm)=>{
-    
+export const ApiGetCryptoPrice = async (userSelection:UserSelection)=>{ 
  try{
     const {selectedCurrency,  selectedCrypto} = userSelection
-    const response: CryptosInfoResponse = await api.get(`/data/pricemultifull?fsyms=${selectedCrypto}&tsyms=${selectedCurrency}`);
-    return response?.DISPLAY[selectedCrypto][selectedCurrency];
+    const response: CryptosInfoResponse = await Api.get(`data/pricemultifull?fsyms=${selectedCrypto}&tsyms=${selectedCurrency}`);
+    return response?.data.DISPLAY[selectedCrypto][selectedCurrency];
  }catch(err){
     proccessError(err)
  }
 
 
 
-}
+} 

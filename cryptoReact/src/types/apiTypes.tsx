@@ -1,24 +1,34 @@
+import { cryptoListItem } from "../redux/mainSlice";
+
+export type GetCryptoListApiResponse = {
+    Data: Array<cryptoListItem>
+}
+
+
+
+
 export type ReturnElemenType = {
-    id:string;
-    cryptoFullName:string;
-    name:string;
+    id: string;
+    cryptoFullName: string;
+    name: string;
 }
 export type CryptosInfoResponse = {
-    DISPLAY: {
-        [key:string]:{
-            [key:string]:{}
-        }
-       
-    },
-    RAY:{}
+    data: {
+        DISPLAY: {
+            [key: string]: {
+                [key: string]: {}
+            }
+        },
+        RAY: {}
+    }
 
-} | undefined
+}
 
 export type CyptoInfoResponseSanitized = {
-    PRICE:string
-    HIGHDAY:string
-    LOWDAY:string
-    LASTUPDATE:string
-    CHANGEPCT24HOUR:string
-    IMAGEURL:string
+    PRICE: string
+    HIGHDAY: string
+    LOWDAY: string
+    LASTUPDATE: string
+    CHANGEPCT24HOUR: string
+    IMAGEURL: string
 }

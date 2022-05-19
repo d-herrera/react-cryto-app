@@ -1,50 +1,16 @@
-import { useEffect, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import styled from '@emotion/styled';
-import { ReactElement } from 'react';
 import Error from './Error';
 import useSelectMonedas from '../hooks/useSelectCurrency';
-import { Currency } from '../types/formTypes';
+import { UserSelection } from '../types/formTypes';
 import { SyntheticEvent } from 'react';
 import { SetStateAction } from 'react';
-import {getCriptoCurrencies} from '../api/api'
+import { getCryptoList, getCryptoPrice, updateShowResults } from '../redux/mainSlice';
 import { ReturnElemenType } from '../types/apiTypes';
 import { SelectType } from '../types/selectTypes';
-/* type Crypto = {
-    Algorithm: string
-    AssetLaunchDate: string
-    BlockNumber: number
-    BlockReward:number
-    BlockTime: number
-    DocumentType: string
-    FullName: string
-    Id: string
-    ImageUrl: string
-    Internal: string
-    MaxSupply: number
-    Name: string
-    NetHashesPerSecond: number
-    ProofType: string
-    Rating: object
-    Type: number
-    Url: string
-} */
+import { useAppDispatch, useTypedSelector } from '../hooks/useRedux';
+import { currencyOptionList } from '../const/mockCurrencyData';
 
-type Crypto =
-    {
-        CoinInfo:object
-        Display:object
-        RAW:object
-    }
-
-type ApiResponse = {
-    Data: Array<Crypto>
-    HasWarning: boolean
-    Message: string
-    MetaData: object
-    RateLimit: object
-    SponsoredData: []
-    Type: number
-}
 
 const StyledForm = styled.form`
     display: flex;
@@ -60,7 +26,7 @@ const SelectWrapper = styled.div`
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
-    &:nth-child(2){
+    &:nth-of-type(2){
         margin-top:40px;
     }
     @media (max-width: 885px) {
@@ -92,61 +58,45 @@ const SubmitButton = styled.input`
     }
     
 `
-    const options:Array<Currency>= [
-        {
-            id:'USD',
-            name:'Dolar de Estados Unidos'
-        },
-        {
-            id:'EUR',
-            name:'Euro'
-        },
-        {
-            id:'ARS',
-            name:'Peso Argentinos'
-        }
-    ]
 
-const Form = ({setUserSelection, crytoOptionList}):ReactElement => {
-    const [cryptocurrencies , setcryptocurrencies ] = useState<Promise<ReturnElemenType[]>>()
+const Form: FC = () => {
     const [error, setError] = useState<Boolean>(false)
-    const [selectedCurrency, SelectCurrency] = useSelectMonedas('Elije tu moneda', options, SelectType.CurrencySelect);
-    const [selectedCrypto, SelectCrypto] = useSelectMonedas('Elije tu criptomoneda', crytoOptionList, SelectType.CryptoSelect);
+    const { cryptoList } = useTypedSelector(state => state.main)
+    const { cryptoPrice } = useTypedSelector(state => state.main)
+    const [selectedCurrency, SelectCurrency] = useSelectMonedas('Elije tu moneda', currencyOptionList, SelectType.CurrencySelect);
+    const [selectedCrypto, SelectCrypto] = useSelectMonedas('Elije tu criptomoneda', cryptoList, SelectType.CryptoSelect);
+    const dispatch = useAppDispatch()
 
-    useEffect(()=>{
-    },[crytoOptionList])
+    useEffect(() => {
+        dispatch(getCryptoList())
+    }, [])
 
-    const handleSubmit=(e:SyntheticEvent)=>{
+    useEffect(() => {
+    }, [cryptoPrice])
+
+    const handleSubmit = (e: SyntheticEvent) => {
         e.preventDefault();
-        if([selectedCurrency, selectedCrypto].includes('')){
+        if ([selectedCurrency, selectedCrypto].includes('')) {
             console.log('error')
             setError(true);
             return
         }
         setError(false);
-        setUserSelection(
-            {
-                selectedCurrency,
-                selectedCrypto
-            }
-        )
-
+        const userSelection = { selectedCurrency, selectedCrypto } as UserSelection;
+        dispatch(getCryptoPrice(userSelection))
+        dispatch(updateShowResults(true))
     }
 
-    
+
     return (
         <>
             {error && <Error>Todos los campos son obligatorios</Error>}
             <StyledForm onSubmit={handleSubmit} >
                 <SelectWrapper>
-                    <SelectCurrency/>
-                    <SelectCrypto/>
+                    <SelectCurrency />
+                    <SelectCrypto />
                 </SelectWrapper>
-                <SubmitButton
-                    type='submit'
-                    value='Cotizar'
-                />
-
+                <SubmitButton type='submit' value='Cotizar' />
             </StyledForm>
         </>
     )
