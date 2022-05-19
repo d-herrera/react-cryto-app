@@ -1,4 +1,5 @@
 import styled from "@emotion/styled";
+import { FC } from "react";
 
 const ErrorMesage = styled.div`
     background-color: red;
@@ -11,7 +12,7 @@ const ErrorMesage = styled.div`
     font-weight: 700;
 `
 
-const Error = ({children})=>{
+const Error: FC = ({children})=>{
     return(
         <ErrorMesage>
             {children}
